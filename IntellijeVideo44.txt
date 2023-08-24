@@ -1,0 +1,98 @@
+package org.example.Spies;
+
+
+==================================================================================================
+import org.example.Stubbing.BookRepository;
+import org.example.Stubbing.BookRequest;
+
+import java.util.List;
+
+public class BookService {
+
+
+    public Book findbookById(String bookid) {
+        // code bring from database
+        return null;  // or it can return an excpetion like method no implemented
+    }
+
+    public int getAppliedDiscount(Book book, int discountRate) {
+
+        int price = book.getPrice();
+        int newprice=price-(price*discountRate/100);
+        return newprice;
+    }
+}
+
+
+
+=================================================================
+package org.example.Spies;
+
+public class BookManager {
+    private BookService bookService;
+
+    public BookManager(BookService bookService){
+        this.bookService=bookService;
+    }
+
+    public int appllyDiscount(String bookid , int discountRate){
+
+        Book book = bookService.findbookById(bookid);  // we need to mock
+        int discountedPrice = bookService.getAppliedDiscount(book , discountRate); // we need to call  -----5
+        return  discountedPrice;
+    }
+
+}
+
+
+
+
+===========================================================================
+
+@ExtendWith(MockitoExtension.class)
+public class BookManagerTest {
+
+    @InjectMocks
+    private BookManager bookManager;              ----------------------1
+
+    @Spy
+    private BookService bookService;             --------------------2
+
+
+   
+
+    @Test
+    public void TestMockitoSpy_WithAnootaion(){
+        Book book = new Book("123","classmate" ,100);
+
+        Mockito.when(bookService.findbookById("1234")).thenReturn(book);   -------4     
+
+
+        int discointprice = bookManager.appllyDiscount("1234", 10);      --------3
+        Assertions.assertEquals(90,discointprice);
+
+
+
+    }
+}
+
+
+++++++++++++++++++++++++
+Explaniation
+-------1 > ab hm yahan book manager class me inject kr rhe hn mock
+-------2 > is baar hm mock ki jagah spy use kr  rhe hn ispe 2 fayade hn
+    i> age hme actual db ka data use krna ho ek call me to hm vo bhi use kr skte
+    ii> ur dusre method call me hme stubbed data used krna ho to hm vo bhi use kr skte isliye ye importatnt h
+
+    ---3  ab jase hi 3rd call hoge to ye book manager class me jayega ab isko method me sbse pehle
+        boookservice.findbookbyid() call krna hoga 
+         ur jb hm hm bookservice wale class me jayenge to hmne isko define nahi krna h to hm iska mock data use krenge by
+         line  -----4
+
+   *** jase hi hmne line ---4 likh de ti iska mtlb chahe findbookByid me kutch bhi explanation ho , return type ho in bookservice
+       class me iska koi imoact nahi padega  jb hm when and then mock use krenge SpY ke through
+
+----5 ke through bookservice ka discount wala method call hoga ab hme iske real implementation use krne hn ,
+     to hm easily use kr  skte hn spy ki help se ab ye error nahi dega koi 
+
+-- isse tarah se code easily execute ho jaega 
